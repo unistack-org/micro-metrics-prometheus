@@ -10,14 +10,14 @@ func NewHandlerWrapper() server.HandlerWrapper {
 	opsCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "micro_requests_total",
-			Help: "How many go-miro requests processed, partitioned by method and status",
+			Help: "How many go-micro requests processed, partitioned by method and status",
 		},
 		[]string{"method", "status"},
 	)
 
 	timeCounter := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "micro_request_durations_microseconds",
+			Name: "micro_request_duration_microseconds",
 			Help: "Service method request latencies in microseconds",
 		},
 		[]string{"method"},
