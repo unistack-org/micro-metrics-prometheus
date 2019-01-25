@@ -5,8 +5,8 @@ This plugin implements the HandlerWrapper interface to provide automatic prometh
 for each microservice method execution time and operation count for success and failed cases.
 
 This handler will export two metrics to prometheus:
-* **go_micro_requests_total**. How many go-miro requests processed, partitioned by method and status.
-* **go_micro_request_durations_microseconds**. Service method request latencies in microseconds, partitioned by method.
+* **micro_requests_total**. How many go-miro requests processed, partitioned by method and status.
+* **micro_request_durations_microseconds**. Service method request latencies in microseconds, partitioned by method.
 
 # Usage
 
