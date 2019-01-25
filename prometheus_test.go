@@ -44,6 +44,8 @@ func TestPrometheusMetrics(t *testing.T) {
 		server.WrapHandler(NewHandlerWrapper()),
 	)
 
+	defer s.Stop()
+
 	type Test struct {
 		*testHandler
 	}
@@ -85,8 +87,6 @@ func TestPrometheusMetrics(t *testing.T) {
 	assert.Equal(t, *metric.Metric[1].Label[1].Name, "status")
 	assert.Equal(t, *metric.Metric[1].Label[1].Value, "success")
 	assert.Equal(t, *metric.Metric[1].Counter.Value, float64(1))
-
-	s.Stop()
 }
 
 func findMetricByName(list []*dto.MetricFamily, tp dto.MetricType, name string) *dto.MetricFamily {
