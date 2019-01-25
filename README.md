@@ -6,7 +6,7 @@ for each microservice method execution time and operation count for success and 
 
 This handler will export two metrics to prometheus:
 * **micro_requests_total**. How many go-miro requests processed, partitioned by method and status.
-* **micro_request_durations_microseconds**. Service method request latencies in microseconds, partitioned by method.
+* **micro_request_duration_microseconds**. Service method request latencies in microseconds, partitioned by method.
 
 # Usage
 
