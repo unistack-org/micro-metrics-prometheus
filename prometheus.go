@@ -9,7 +9,7 @@ import (
 func NewHandlerWrapper() server.HandlerWrapper {
 	opsCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "micro_requests_total",
+			Name: "micro_request_total",
 			Help: "How many go-micro requests processed, partitioned by method and status",
 		},
 		[]string{"method", "status"},
