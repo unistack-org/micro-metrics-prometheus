@@ -3,6 +3,8 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/registry/memory"
 	"github.com/micro/go-micro/selector"
@@ -10,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type Test interface {
@@ -35,13 +36,29 @@ func TestPrometheusMetrics(t *testing.T) {
 	// setup
 	registry := memory.NewRegistry()
 	sel := selector.NewSelector(selector.Registry(registry))
+
 	name := "test"
+	id := "id-1234567890"
+	version := "1.2.3.4"
+
+	md := make(map[string]string)
+	md["dc"] = "dc1"
+	md["node"] = "node1"
 
 	c := client.NewClient(client.Selector(sel))
 	s := server.NewServer(
 		server.Name(name),
+		server.Version(version),
+		server.Id(id),
 		server.Registry(registry),
-		server.WrapHandler(NewHandlerWrapper()),
+		server.WrapHandler(
+			NewHandlerWrapper(
+				server.Metadata(md),
+				server.Name(name),
+				server.Version(version),
+				server.Id(id),
+			),
+		),
 	)
 
 	defer s.Stop()
@@ -69,23 +86,70 @@ func TestPrometheusMetrics(t *testing.T) {
 	list, _ := prometheus.DefaultGatherer.Gather()
 
 	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_request_duration_microseconds")
-	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
-	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
-	assert.Equal(t, *metric.Metric[0].Summary.SampleCount, uint64(2))
+
+	for _, v := range metric.Metric[0].Label {
+		switch *v.Name {
+		case "micro_dc":
+			assert.Equal(t, "dc1", *v.Value)
+		case "micro_node":
+			assert.Equal(t, "node1", *v.Value)
+		case "micro_version":
+			assert.Equal(t, version, *v.Value)
+		case "micro_id":
+			assert.Equal(t, id, *v.Value)
+		case "micro_name":
+			assert.Equal(t, name, *v.Value)
+		case "method":
+			assert.Equal(t, "Test.Method", *v.Value)
+		default:
+			t.Fatalf("unknown %v with %v", *v.Name, *v.Value)
+		}
+	}
+
+	assert.Equal(t, uint64(2), *metric.Metric[0].Summary.SampleCount)
 	assert.True(t, *metric.Metric[0].Summary.SampleSum > 0)
 
 	metric = findMetricByName(list, dto.MetricType_COUNTER, "micro_request_total")
 
-	assert.Equal(t, *metric.Metric[0].Label[0].Name, "method")
-	assert.Equal(t, *metric.Metric[0].Label[0].Value, "Test.Method")
-	assert.Equal(t, *metric.Metric[0].Label[1].Name, "status")
-	assert.Equal(t, *metric.Metric[0].Label[1].Value, "fail")
+	for _, v := range metric.Metric[0].Label {
+		switch *v.Name {
+		case "micro_dc":
+			assert.Equal(t, "dc1", *v.Value)
+		case "micro_node":
+			assert.Equal(t, "node1", *v.Value)
+		case "micro_version":
+			assert.Equal(t, version, *v.Value)
+		case "micro_id":
+			assert.Equal(t, id, *v.Value)
+		case "micro_name":
+			assert.Equal(t, name, *v.Value)
+		case "method":
+			assert.Equal(t, "Test.Method", *v.Value)
+		case "status":
+			assert.Equal(t, "fail", *v.Value)
+		}
+	}
 	assert.Equal(t, *metric.Metric[0].Counter.Value, float64(1))
 
-	assert.Equal(t, *metric.Metric[1].Label[0].Name, "method")
-	assert.Equal(t, *metric.Metric[1].Label[0].Value, "Test.Method")
-	assert.Equal(t, *metric.Metric[1].Label[1].Name, "status")
-	assert.Equal(t, *metric.Metric[1].Label[1].Value, "success")
+	for _, v := range metric.Metric[1].Label {
+		switch *v.Name {
+		case "dc":
+			assert.Equal(t, "dc1", *v.Value)
+		case "node":
+			assert.Equal(t, "node1", *v.Value)
+		case "micro_version":
+			assert.Equal(t, version, *v.Value)
+		case "micro_id":
+			assert.Equal(t, id, *v.Value)
+		case "micro_name":
+			assert.Equal(t, name, *v.Value)
+		case "method":
+			assert.Equal(t, "Test.Method", *v.Value)
+		case "status":
+			assert.Equal(t, "success", *v.Value)
+		}
+	}
+
 	assert.Equal(t, *metric.Metric[1].Counter.Value, float64(1))
 }
 
