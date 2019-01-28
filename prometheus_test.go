@@ -85,7 +85,7 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	list, _ := prometheus.DefaultGatherer.Gather()
 
-	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_request_duration_microseconds")
+	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_upstream_latency_microseconds")
 
 	for _, v := range metric.Metric[0].Label {
 		switch *v.Name {
@@ -108,6 +108,30 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	assert.Equal(t, uint64(2), *metric.Metric[0].Summary.SampleCount)
 	assert.True(t, *metric.Metric[0].Summary.SampleSum > 0)
+
+	metric = findMetricByName(list, dto.MetricType_HISTOGRAM, "micro_request_duration_seconds")
+
+	for _, v := range metric.Metric[0].Label {
+		switch *v.Name {
+		case "micro_dc":
+			assert.Equal(t, "dc1", *v.Value)
+		case "micro_node":
+			assert.Equal(t, "node1", *v.Value)
+		case "micro_version":
+			assert.Equal(t, version, *v.Value)
+		case "micro_id":
+			assert.Equal(t, id, *v.Value)
+		case "micro_name":
+			assert.Equal(t, name, *v.Value)
+		case "method":
+			assert.Equal(t, "Test.Method", *v.Value)
+		default:
+			t.Fatalf("unknown %v with %v", *v.Name, *v.Value)
+		}
+	}
+
+	assert.Equal(t, uint64(2), *metric.Metric[0].Histogram.SampleCount)
+	assert.True(t, *metric.Metric[0].Histogram.SampleSum > 0)
 
 	metric = findMetricByName(list, dto.MetricType_COUNTER, "micro_request_total")
 
