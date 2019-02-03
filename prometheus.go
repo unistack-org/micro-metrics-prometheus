@@ -35,34 +35,40 @@ func NewHandlerWrapper(opts ...server.Option) server.HandlerWrapper {
 
 	opsCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:        fmt.Sprintf("%s_request_total", defaultMetricPrefix),
-			Help:        "How many go-micro requests processed, partitioned by method and status",
-			ConstLabels: md,
+			Name: fmt.Sprintf("%s_request_total", defaultMetricPrefix),
+			Help: "How many go-micro requests processed, partitioned by method and status",
 		},
 		[]string{"method", "status"},
 	)
 
 	timeCounterSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name:        fmt.Sprintf("%s_upstream_latency_microseconds", defaultMetricPrefix),
-			Help:        "Service backend method request latencies in microseconds",
-			ConstLabels: md,
+			Name: fmt.Sprintf("%s_upstream_latency_microseconds", defaultMetricPrefix),
+			Help: "Service backend method request latencies in microseconds",
 		},
 		[]string{"method"},
 	)
 
 	timeCounterHistogram := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:        fmt.Sprintf("%s_request_duration_seconds", defaultMetricPrefix),
-			Help:        "Service method request time in seconds",
-			ConstLabels: md,
+			Name: fmt.Sprintf("%s_request_duration_seconds", defaultMetricPrefix),
+			Help: "Service method request time in seconds",
 		},
 		[]string{"method"},
 	)
 
-	prometheus.MustRegister(opsCounter)
-	prometheus.MustRegister(timeCounterSummary)
-	prometheus.MustRegister(timeCounterHistogram)
+	reg := prometheus.NewRegistry()
+	wrapreg := prometheus.WrapRegistererWith(md, reg)
+	wrapreg.MustRegister(
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		prometheus.NewGoCollector(),
+		opsCounter,
+		timeCounterSummary,
+		timeCounterHistogram,
+	)
+
+	prometheus.DefaultGatherer = reg
+	prometheus.DefaultRegisterer = wrapreg
 
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {

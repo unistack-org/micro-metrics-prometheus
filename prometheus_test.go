@@ -87,6 +87,10 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_upstream_latency_microseconds")
 
+	if metric == nil || metric.Metric == nil || len(metric.Metric) == 0 {
+		t.Fatalf("no metrics returned")
+	}
+
 	for _, v := range metric.Metric[0].Label {
 		switch *v.Name {
 		case "micro_dc":
