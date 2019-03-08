@@ -35,24 +35,27 @@ func NewHandlerWrapper(opts ...server.Option) server.HandlerWrapper {
 
 	opsCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: fmt.Sprintf("%s_request_total", defaultMetricPrefix),
-			Help: "How many go-micro requests processed, partitioned by method and status",
+			Namespace: "micro",
+			Name:      "request_total",
+			Help:      "How many go-micro requests processed, partitioned by method and status",
 		},
 		[]string{"method", "status"},
 	)
 
 	timeCounterSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: fmt.Sprintf("%s_upstream_latency_microseconds", defaultMetricPrefix),
-			Help: "Service backend method request latencies in microseconds",
+			Namespace: "micro",
+			Name:      "upstream_latency_microseconds",
+			Help:      "Service backend method request latencies in microseconds",
 		},
 		[]string{"method"},
 	)
 
 	timeCounterHistogram := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: fmt.Sprintf("%s_request_duration_seconds", defaultMetricPrefix),
-			Help: "Service method request time in seconds",
+			Namespace: "micro",
+			Name:      "request_duration_seconds",
+			Help:      "Service method request time in seconds",
 		},
 		[]string{"method"},
 	)
