@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/micro/go-micro/client"
-	"github.com/micro/go-micro/registry/memory"
 	"github.com/micro/go-micro/client/selector"
+	"github.com/micro/go-micro/registry/memory"
 	"github.com/micro/go-micro/server"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
