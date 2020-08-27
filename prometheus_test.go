@@ -9,8 +9,10 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	bmemory "github.com/unistack-org/micro-broker-memory"
+	cli "github.com/unistack-org/micro-client-grpc"
 	promwrapper "github.com/unistack-org/micro-metrics-prometheus"
 	rmemory "github.com/unistack-org/micro-registry-memory"
+	srv "github.com/unistack-org/micro-server-grpc"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/router"
@@ -37,6 +39,7 @@ func (t *testHandler) Method(ctx context.Context, req *TestRequest, rsp *TestRes
 }
 
 func TestPrometheusMetrics(t *testing.T) {
+	client.DefaultRetries = 0
 	// setup
 	reg, err := rmemory.NewRegistry()
 	if err != nil {
@@ -50,11 +53,15 @@ func TestPrometheusMetrics(t *testing.T) {
 	name := "test"
 	id := "id-1234567890"
 	version := "1.2.3.4"
+	rt, err := rrouter.NewRouter(router.Registry(reg))
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	c := client.NewClient(
-		client.Router(rrouter.NewRouter(router.Registry(registry))),
+	c := cli.NewClient(
+		client.Router(rt),
 	)
-	s := server.NewServer(
+	s, err := srv.NewServer(
 		server.Name(name),
 		server.Version(version),
 		server.Id(id),
@@ -68,9 +75,9 @@ func TestPrometheusMetrics(t *testing.T) {
 			),
 		),
 	)
-
-	defer s.Stop()
-
+	if err != nil {
+		t.Fatal(err)
+	}
 	type Test struct {
 		*testHandler
 	}
@@ -82,6 +89,7 @@ func TestPrometheusMetrics(t *testing.T) {
 	if err := s.Start(); err != nil {
 		t.Fatalf("Unexpected error starting server: %v", err)
 	}
+	defer s.Stop()
 
 	req := c.NewRequest(name, "Test.Method", &TestRequest{IsError: false}, client.WithContentType("application/json"))
 	rsp := TestResponse{}

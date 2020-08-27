@@ -8,7 +8,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/logger"
-	"github.com/unistack-org/micro/v3/registry"
 	"github.com/unistack-org/micro/v3/server"
 )
 
@@ -154,7 +153,7 @@ func NewCallWrapper(opts ...Option) client.CallWrapper {
 	}
 }
 
-func (w *wrapper) CallFunc(ctx context.Context, node *registry.Node, req client.Request, rsp interface{}, opts client.CallOptions) error {
+func (w *wrapper) CallFunc(ctx context.Context, addr string, req client.Request, rsp interface{}, opts client.CallOptions) error {
 	endpoint := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
@@ -164,7 +163,7 @@ func (w *wrapper) CallFunc(ctx context.Context, node *registry.Node, req client.
 	}))
 	defer timer.ObserveDuration()
 
-	err := w.callFunc(ctx, node, req, rsp, opts)
+	err := w.callFunc(ctx, addr, req, rsp, opts)
 	if err == nil {
 		opsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "success").Inc()
 	} else {
