@@ -12,11 +12,11 @@ import (
 	cli "github.com/unistack-org/micro-client-grpc"
 	promwrapper "github.com/unistack-org/micro-metrics-prometheus"
 	rmemory "github.com/unistack-org/micro-registry-memory"
+	rrouter "github.com/unistack-org/micro-router-registry"
 	srv "github.com/unistack-org/micro-server-grpc"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
 	"github.com/unistack-org/micro/v3/router"
-	rrouter "github.com/unistack-org/micro/v3/router/registry"
 	"github.com/unistack-org/micro/v3/server"
 )
 
@@ -41,27 +41,18 @@ func (t *testHandler) Method(ctx context.Context, req *TestRequest, rsp *TestRes
 func TestPrometheusMetrics(t *testing.T) {
 	client.DefaultRetries = 0
 	// setup
-	reg, err := rmemory.NewRegistry()
-	if err != nil {
-		t.Fatal(err)
-	}
-	brk, err := bmemory.NewBroker(broker.Registry(reg))
-	if err != nil {
-		t.Fatal(err)
-	}
+	reg := rmemory.NewRegistry()
+	brk := bmemory.NewBroker(broker.Registry(reg))
 
 	name := "test"
 	id := "id-1234567890"
 	version := "1.2.3.4"
-	rt, err := rrouter.NewRouter(router.Registry(reg))
-	if err != nil {
-		t.Fatal(err)
-	}
+	rt := rrouter.NewRouter(router.Registry(reg))
 
 	c := cli.NewClient(
 		client.Router(rt),
 	)
-	s, err := srv.NewServer(
+	s := srv.NewServer(
 		server.Name(name),
 		server.Version(version),
 		server.Id(id),
@@ -75,7 +66,8 @@ func TestPrometheusMetrics(t *testing.T) {
 			),
 		),
 	)
-	if err != nil {
+
+	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
 	type Test struct {
