@@ -21,6 +21,14 @@ var (
 	timeCounterSummary   *prometheus.SummaryVec
 	timeCounterHistogram *prometheus.HistogramVec
 
+	publishOpsCounter           *prometheus.CounterVec
+	publishTimeCounterSummary   *prometheus.SummaryVec
+	publishTimeCounterHistogram *prometheus.HistogramVec
+
+	subscribeOpsCounter           *prometheus.CounterVec
+	subscribeTimeCounterSummary   *prometheus.SummaryVec
+	subscribeTimeCounterHistogram *prometheus.HistogramVec
+
 	mu sync.Mutex
 )
 
@@ -98,6 +106,116 @@ func registerMetrics() {
 				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
 			},
 		)
+	}
+
+	if subscribeOpsCounter == nil {
+		subscribeOpsCounter = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: fmt.Sprintf("%ssubscribe_message_total", DefaultMetricPrefix),
+				Help: "Messages processed, partitioned by endpoint and status",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "status"),
+			},
+		)
+	}
+
+	if subscribeTimeCounterSummary == nil {
+		subscribeTimeCounterSummary = prometheus.NewSummaryVec(
+			prometheus.SummaryOpts{
+				Name: fmt.Sprintf("%ssubscribe_message_latency_microseconds", DefaultMetricPrefix),
+				Help: "Message processing latencies in microseconds, partitioned by endpoint",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+			},
+		)
+	}
+
+	if subscribeTimeCounterHistogram == nil {
+		subscribeTimeCounterHistogram = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name: fmt.Sprintf("%ssubscribe_message_duration_seconds", DefaultMetricPrefix),
+				Help: "Request time in seconds, partitioned by endpoint",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+			},
+		)
+	}
+
+	if publishOpsCounter == nil {
+		publishOpsCounter = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: fmt.Sprintf("%spublish_message_total", DefaultMetricPrefix),
+				Help: "Messages sent, partitioned by endpoint and status",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "status"),
+			},
+		)
+	}
+
+	if publishTimeCounterSummary == nil {
+		publishTimeCounterSummary = prometheus.NewSummaryVec(
+			prometheus.SummaryOpts{
+				Name: fmt.Sprintf("%spublish_message_latency_microseconds", DefaultMetricPrefix),
+				Help: "Message latencies in microseconds, partitioned by endpoint",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+			},
+		)
+	}
+
+	if publishTimeCounterHistogram == nil {
+		publishTimeCounterHistogram = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name: fmt.Sprintf("%spublish_message_duration_seconds", DefaultMetricPrefix),
+				Help: "Message publish time in seconds, partitioned by endpoint",
+			},
+			[]string{
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "name"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "version"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "id"),
+				fmt.Sprintf("%s%s", DefaultLabelPrefix, "endpoint"),
+			},
+		)
+	}
+
+	for _, collector := range []prometheus.Collector{publishOpsCounter, publishTimeCounterSummary, publishTimeCounterHistogram} {
+		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
+			// if already registered, skip fatal
+			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
+				logger.Fatal(err)
+			}
+		}
+	}
+
+	for _, collector := range []prometheus.Collector{subscribeOpsCounter, subscribeTimeCounterSummary, subscribeTimeCounterHistogram} {
+		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
+			// if already registered, skip fatal
+			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
+				logger.Fatal(err)
+			}
+		}
 	}
 
 	for _, collector := range []prometheus.Collector{opsCounter, timeCounterSummary, timeCounterHistogram} {
@@ -219,16 +337,16 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		us := v * 1000000 // make microseconds
-		timeCounterSummary.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(us)
-		timeCounterHistogram.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(v)
+		publishTimeCounterSummary.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(us)
+		publishTimeCounterHistogram.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(v)
 	}))
 	defer timer.ObserveDuration()
 
 	err := w.Client.Publish(ctx, p, opts...)
 	if err == nil {
-		opsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "success").Inc()
+		publishOpsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "success").Inc()
 	} else {
-		opsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "failure").Inc()
+		publishOpsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "failure").Inc()
 	}
 
 	return err
@@ -292,16 +410,16 @@ func (w *wrapper) SubscriberFunc(fn server.SubscriberFunc) server.SubscriberFunc
 
 		timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 			us := v * 1000000 // make microseconds
-			timeCounterSummary.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(us)
-			timeCounterHistogram.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(v)
+			subscribeTimeCounterSummary.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(us)
+			subscribeTimeCounterHistogram.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint).Observe(v)
 		}))
 		defer timer.ObserveDuration()
 
 		err := fn(ctx, msg)
 		if err == nil {
-			opsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "success").Inc()
+			subscribeOpsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "success").Inc()
 		} else {
-			opsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "failure").Inc()
+			subscribeOpsCounter.WithLabelValues(w.options.Name, w.options.Version, w.options.ID, endpoint, "failure").Inc()
 		}
 
 		return err

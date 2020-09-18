@@ -6,10 +6,10 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/stretchr/testify v1.6.1
-	github.com/unistack-org/micro-broker-memory v0.0.0-20200828085738-105f1b1b5096
-	github.com/unistack-org/micro-client-grpc v0.0.0-20200831095435-f14a968bad15
-	github.com/unistack-org/micro-registry-memory v0.0.0-20200828091049-4bf185167368
-	github.com/unistack-org/micro-router-registry v0.0.0-20200828092752-19e0b3a7210f
-	github.com/unistack-org/micro-server-grpc v0.0.0-20200831105142-621a5cec83ba
-	github.com/unistack-org/micro/v3 v3.0.0-20200831085130-7c115823a7ab
+	github.com/unistack-org/micro-broker-memory v0.0.0-20200905101815-4594aa2807e9
+	github.com/unistack-org/micro-client-grpc v0.0.0-20200910215954-fef2610f9ce6
+	github.com/unistack-org/micro-registry-memory v0.0.0-20200905064113-34be66be749f
+	github.com/unistack-org/micro-router-registry v0.0.0-20200905063806-8285d1378d3c
+	github.com/unistack-org/micro-server-grpc v0.0.0-20200910121150-d9ebaf6efac3
+	github.com/unistack-org/micro/v3 v3.0.0-gamma.0.20200907103852-5fe3a46732e7
 )
