@@ -252,7 +252,7 @@ func registerClientMetrics() {
 	if clientOpsCounter == nil {
 		clientOpsCounter = prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: fmt.Sprintf("%sclient_request_total", DefaultMetricPrefix),
+				Name: fmt.Sprintf("%srequest_total", DefaultMetricPrefix),
 				Help: "Requests processed, partitioned by endpoint and status",
 			},
 			[]string{
@@ -268,7 +268,7 @@ func registerClientMetrics() {
 	if clientTimeCounterSummary == nil {
 		clientTimeCounterSummary = prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
-				Name: fmt.Sprintf("%sclient_request_latency_microseconds", DefaultMetricPrefix),
+				Name: fmt.Sprintf("%srequest_latency_microseconds", DefaultMetricPrefix),
 				Help: "Request latencies in microseconds, partitioned by endpoint",
 			},
 			[]string{
@@ -283,7 +283,7 @@ func registerClientMetrics() {
 	if clientTimeCounterHistogram == nil {
 		clientTimeCounterHistogram = prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name: fmt.Sprintf("%sclient_request_duration_seconds", DefaultMetricPrefix),
+				Name: fmt.Sprintf("%srequest_duration_seconds", DefaultMetricPrefix),
 				Help: "Request time in seconds, partitioned by endpoint",
 			},
 			[]string{
