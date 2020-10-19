@@ -12,5 +12,4 @@ require (
 	github.com/unistack-org/micro-router-registry v0.0.0-20200920130103-a1ccc75a7761
 	github.com/unistack-org/micro-server-grpc v0.0.0-20200922093840-830e8ebadd70
 	github.com/unistack-org/micro/v3 v3.0.0-gamma.0.20200922103357-4c4fa00a5d94
-
 )
