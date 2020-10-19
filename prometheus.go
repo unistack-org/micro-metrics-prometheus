@@ -33,14 +33,6 @@ var (
 	subscribeTimeCounterSummary   *prometheus.SummaryVec
 	subscribeTimeCounterHistogram *prometheus.HistogramVec
 
-	publishOpsCounter           *prometheus.CounterVec
-	publishTimeCounterSummary   *prometheus.SummaryVec
-	publishTimeCounterHistogram *prometheus.HistogramVec
-
-	subscribeOpsCounter           *prometheus.CounterVec
-	subscribeTimeCounterSummary   *prometheus.SummaryVec
-	subscribeTimeCounterHistogram *prometheus.HistogramVec
-
 	mu sync.Mutex
 )
 
