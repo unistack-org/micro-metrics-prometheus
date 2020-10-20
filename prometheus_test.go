@@ -93,7 +93,7 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	list, _ := prometheus.DefaultGatherer.Gather()
 
-	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_latency_microseconds")
+	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_server_request_latency_microseconds")
 
 	if metric == nil || metric.Metric == nil || len(metric.Metric) == 0 {
 		t.Fatalf("no metrics returned")
@@ -117,7 +117,7 @@ func TestPrometheusMetrics(t *testing.T) {
 	assert.Equal(t, uint64(2), *metric.Metric[0].Summary.SampleCount)
 	assert.True(t, *metric.Metric[0].Summary.SampleSum > 0)
 
-	metric = findMetricByName(list, dto.MetricType_HISTOGRAM, "micro_request_duration_seconds")
+	metric = findMetricByName(list, dto.MetricType_HISTOGRAM, "micro_server_request_duration_seconds")
 
 	for _, v := range metric.Metric[0].Label {
 		switch *v.Name {
@@ -137,7 +137,7 @@ func TestPrometheusMetrics(t *testing.T) {
 	assert.Equal(t, uint64(2), *metric.Metric[0].Histogram.SampleCount)
 	assert.True(t, *metric.Metric[0].Histogram.SampleSum > 0)
 
-	metric = findMetricByName(list, dto.MetricType_COUNTER, "micro_request_total")
+	metric = findMetricByName(list, dto.MetricType_COUNTER, "micro_server_request_total")
 
 	for _, v := range metric.Metric[0].Label {
 		switch *v.Name {
