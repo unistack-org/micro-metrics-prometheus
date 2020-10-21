@@ -93,7 +93,7 @@ func TestPrometheusMetrics(t *testing.T) {
 
 	list, _ := prometheus.DefaultGatherer.Gather()
 
-	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_server_request_latency_microseconds")
+	metric := findMetricByName(list, dto.MetricType_SUMMARY, "micro_server_latency_microseconds")
 
 	if metric == nil || metric.Metric == nil || len(metric.Metric) == 0 {
 		t.Fatalf("no metrics returned")
