@@ -85,7 +85,7 @@ func registerServerMetrics() {
 	if serverTimeCounterSummary == nil {
 		serverTimeCounterSummary = prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
-				Name: fmt.Sprintf("%sserver_request_latency_microseconds", DefaultMetricPrefix),
+				Name: fmt.Sprintf("%sserver_latency_microseconds", DefaultMetricPrefix),
 				Help: "Request latencies in microseconds, partitioned by endpoint",
 			},
 			[]string{
@@ -268,7 +268,7 @@ func registerClientMetrics() {
 	if clientTimeCounterSummary == nil {
 		clientTimeCounterSummary = prometheus.NewSummaryVec(
 			prometheus.SummaryOpts{
-				Name: fmt.Sprintf("%srequest_latency_microseconds", DefaultMetricPrefix),
+				Name: fmt.Sprintf("%slatency_microseconds", DefaultMetricPrefix),
 				Help: "Request latencies in microseconds, partitioned by endpoint",
 			},
 			[]string{
