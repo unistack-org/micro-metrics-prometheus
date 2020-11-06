@@ -116,7 +116,7 @@ func registerServerMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err)
+				logger.Fatal(err.Error())
 			}
 		}
 	}
@@ -177,7 +177,7 @@ func registerPublishMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err)
+				logger.Fatal(err.Error())
 			}
 		}
 	}
@@ -238,7 +238,7 @@ func registerSubscribeMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err)
+				logger.Fatal(err.Error())
 			}
 		}
 	}
