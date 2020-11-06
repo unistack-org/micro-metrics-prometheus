@@ -299,7 +299,7 @@ func registerClientMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err)
+				logger.Fatal(err.Error())
 			}
 		}
 	}
