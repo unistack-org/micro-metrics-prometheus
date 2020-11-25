@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/metrics"
 )
 
@@ -44,7 +45,7 @@ func New(opts ...metrics.Option) (*Reporter, error) {
 }
 
 // convertTags turns Tags into prometheus labels:
-func (r *Reporter) convertTags(tags metrics.Tags) prometheus.Labels {
+func (r *Reporter) convertTags(tags metadata.Metadata) prometheus.Labels {
 	labels := prometheus.Labels{}
 	for key, value := range tags {
 		labels[key] = r.stripUnsupportedCharacters(value)
@@ -53,7 +54,7 @@ func (r *Reporter) convertTags(tags metrics.Tags) prometheus.Labels {
 }
 
 // listTagKeys returns a list of tag keys (we need to provide this to the Prometheus client):
-func (r *Reporter) listTagKeys(tags metrics.Tags) (labelKeys []string) {
+func (r *Reporter) listTagKeys(tags metadata.Metadata) (labelKeys []string) {
 	for key := range tags {
 		labelKeys = append(labelKeys, key)
 	}
