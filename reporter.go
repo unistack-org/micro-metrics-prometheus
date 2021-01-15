@@ -1,3 +1,5 @@
+// +build ignore
+
 package prometheus
 
 import (
@@ -6,7 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/unistack-org/micro/v3/logger"
+	"github.com/unistack-org/micro/v3/logger"
 	"github.com/unistack-org/micro/v3/metadata"
 	"github.com/unistack-org/micro/v3/metrics"
 )
@@ -19,7 +21,7 @@ type Reporter struct {
 }
 
 // New returns a configured prometheus reporter:
-func New(opts ...metrics.Option) (*Reporter, error) {
+func New(opts ...metrics.Option) (metrics.Reporter, error) {
 	options := metrics.NewOptions(opts...)
 
 	// Make a prometheus registry (this keeps track of any metrics we generate):
@@ -37,11 +39,15 @@ func New(opts ...metrics.Option) (*Reporter, error) {
 	newReporter.metrics = newReporter.newMetricFamily()
 
 	// Handle the metrics endpoint with prometheus:
-	log.Info("Metrics/Prometheus [http] Listening on %s%s", options.Address, options.Path)
+	logger.Infof(options.Context, "Metrics/Prometheus [http] Listening on %s%s", options.Address, options.Path)
 	http.Handle(options.Path, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
 	go http.ListenAndServe(options.Address, nil)
 
 	return newReporter, nil
+}
+
+func (r *Reporter) Init(...metrics.Option) error {
+	return nil
 }
 
 // convertTags turns Tags into prometheus labels:

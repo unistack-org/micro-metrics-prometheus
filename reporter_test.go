@@ -1,12 +1,14 @@
+// +build ignore
+
 package prometheus
 
 import (
 	"testing"
 	"time"
 
-	"github.com/unistack-org/micro/v3/metrics"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/unistack-org/micro/v3/metadata"
+	"github.com/unistack-org/micro/v3/metrics"
 )
 
 func TestPrometheusReporter(t *testing.T) {
@@ -19,11 +21,8 @@ func TestPrometheusReporter(t *testing.T) {
 	assert.Equal(t, ":9000", reporter.options.Address)
 	assert.Equal(t, "/prometheus", reporter.options.Path)
 
-	// Check that our implementation is valid:
-	assert.Implements(t, new(metrics.Reporter), reporter)
-
 	// Test tag conversion:
-	tags := metrics.Tags{
+	tags := metadata.Metadata{
 		"tag1": "false",
 		"tag2": "true",
 	}

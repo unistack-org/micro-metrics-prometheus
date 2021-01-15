@@ -40,29 +40,36 @@ type Options struct {
 	Name    string
 	Version string
 	ID      string
+	Context context.Context
 }
 
 type Option func(*Options)
 
+func Context(ctx context.Context) Option {
+	return func(o *Options) {
+		o.Context = ctx
+	}
+}
+
 func ServiceName(name string) Option {
-	return func(opts *Options) {
-		opts.Name = name
+	return func(o *Options) {
+		o.Name = name
 	}
 }
 
 func ServiceVersion(version string) Option {
-	return func(opts *Options) {
-		opts.Version = version
+	return func(o *Options) {
+		o.Version = version
 	}
 }
 
 func ServiceID(id string) Option {
-	return func(opts *Options) {
-		opts.ID = id
+	return func(o *Options) {
+		o.ID = id
 	}
 }
 
-func registerServerMetrics() {
+func registerServerMetrics(ctx context.Context) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -116,14 +123,14 @@ func registerServerMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err.Error())
+				logger.Fatal(ctx, err.Error())
 			}
 		}
 	}
 
 }
 
-func registerPublishMetrics() {
+func registerPublishMetrics(ctx context.Context) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -177,14 +184,14 @@ func registerPublishMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err.Error())
+				logger.Fatal(ctx, err.Error())
 			}
 		}
 	}
 
 }
 
-func registerSubscribeMetrics() {
+func registerSubscribeMetrics(ctx context.Context) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -238,14 +245,14 @@ func registerSubscribeMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err.Error())
+				logger.Fatal(ctx, err.Error())
 			}
 		}
 	}
 
 }
 
-func registerClientMetrics() {
+func registerClientMetrics(ctx context.Context) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -299,7 +306,7 @@ func registerClientMetrics() {
 		if err := prometheus.DefaultRegisterer.Register(collector); err != nil {
 			// if already registered, skip fatal
 			if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
-				logger.Fatal(err.Error())
+				logger.Fatal(ctx, err.Error())
 			}
 		}
 	}
@@ -313,13 +320,13 @@ type wrapper struct {
 }
 
 func NewClientWrapper(opts ...Option) client.Wrapper {
-	registerClientMetrics()
-	registerPublishMetrics()
-
-	options := Options{}
-	for _, opt := range opts {
-		opt(&options)
+	options := Options{Context: context.Background()}
+	for _, o := range opts {
+		o(&options)
 	}
+
+	registerClientMetrics(options.Context)
+	registerPublishMetrics(options.Context)
 
 	return func(c client.Client) client.Client {
 		handler := &wrapper{
@@ -332,12 +339,12 @@ func NewClientWrapper(opts ...Option) client.Wrapper {
 }
 
 func NewCallWrapper(opts ...Option) client.CallWrapper {
-	registerClientMetrics()
-
-	options := Options{}
-	for _, opt := range opts {
-		opt(&options)
+	options := Options{Context: context.Background()}
+	for _, o := range opts {
+		o(&options)
 	}
+
+	registerClientMetrics(options.Context)
 
 	return func(fn client.CallFunc) client.CallFunc {
 		handler := &wrapper{
@@ -431,12 +438,11 @@ func (w *wrapper) Publish(ctx context.Context, p client.Message, opts ...client.
 }
 
 func NewHandlerWrapper(opts ...Option) server.HandlerWrapper {
-	registerServerMetrics()
-
-	options := Options{}
-	for _, opt := range opts {
-		opt(&options)
+	options := Options{Context: context.Background()}
+	for _, o := range opts {
+		o(&options)
 	}
+	registerServerMetrics(options.Context)
 
 	handler := &wrapper{
 		options: options,
@@ -468,12 +474,12 @@ func (w *wrapper) HandlerFunc(fn server.HandlerFunc) server.HandlerFunc {
 }
 
 func NewSubscriberWrapper(opts ...Option) server.SubscriberWrapper {
-	registerSubscribeMetrics()
-
-	options := Options{}
-	for _, opt := range opts {
-		opt(&options)
+	options := Options{Context: context.Background()}
+	for _, o := range opts {
+		o(&options)
 	}
+
+	registerSubscribeMetrics(options.Context)
 
 	handler := &wrapper{
 		options: options,
